@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกและตรวจเวร</title>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --success-color: #10b981;
+            --background-color: #f3f4f6;
+            --card-color: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, system-ui;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h2, h3 {
+            text-align: center;
+            color: #1f2937;
+        }
+
+        .card {
+            background: var(--card-color);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        /* Camera Box */
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 15px auto;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #000;
+            display: none;
+        }
+
+        video {
+            width: 100%;
+            display: block;
+        }
+
+        .preview-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 15px auto;
+            text-align: center;
+        }
+
+        img#preview {
+            width: 100%;
+            border-radius: 8px;
+            display: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: #4338ca; }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-success:hover { background-color: #059669; }
+        .btn-secondary { background-color: #6b7280; color: white; }
+
+        /* History Table */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th { background-color: #f9fafb; }
+
+        .thumbnail {
+            width: 60px;
+            height: auto;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🧹 ระบบบันทึกการทำเวร</h2>
+    
+    <div class="card">
+        <div class="form-group">
+            <label for="name">👤 ชื่อผู้ส่งเวร / ผู้ตรวจ:</label>
+            <input type="text" id="name" placeholder="กรอกชื่อ-นามสกุลของคุณ" required>
+        </div>
+
+        <div class="form-group">
+            <label for="classroom">🚪 ห้องเรียนที่ทำเวร:</label>
+            <select id="classroom">
+                <option value="ห้อง 1/2">ห้อง 1/2</option>
+                <option value="ห้อง 1/8">ห้อง 1/8</option>
+                <option value="ห้อง 1/11">ห้อง 1/11</option>
+                <option value="ห้อง 2/3">ห้อง 2/3</option>
+                <option value="ห้อง 2/6">ห้อง 2/6</option>
+                <option value="ห้อง 2/11">ห้อง 2/11</option>
+                <option value="ห้อง 3/1">ห้อง 3/1</option>
+                <option value="ห้อง 3/9">ห้อง 3/9</option>
+                <option value="ห้อง 3/12">ห้อง 3/12</option>
+                <option value="ห้อง 4/7">ห้อง 4/7</option>
+                <option value="ห้อง 4/12">ห้อง 4/12</option>
+                <option value="ห้อง 5/6">ห้อง 5/6</option>
+                <option value="ห้อง 5/10">ห้อง 5/10</option>
+                <option value="ห้อง 6/2">ห้อง 6/2</option>
+                <option value="ห้อง 6/8">ห้อง 6/8</option>
+                <option value="ห้อง 6/12">ห้อง 6/12</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="text-align: center;">
+            <label>📸 หลักฐานการทำเวร (เปิดกล้องถ่ายสดเท่านั้น):</label>
+            <button type="button" class="btn-secondary" id="start-cam">เปิดกล้องถ่ายรูป</button>
+            
+            <div class="camera-container" id="camera-box">
+                <video id="video" autoplay playsinline></video>
+                <button type="button" class="btn-success" id="capture-btn">กดถ่ายรูป (Snap)</button>
+            </div>
+
+            <div class="preview-container">
+                <img id="preview" alt="รูปหลักฐาน">
+                <canvas id="canvas" style="display:none;"></canvas>
+            </div>
+        </div>
+
+        <button type="button" class="btn-primary" id="submit-btn" style="margin-top: 20px;">บันทึกข้อมูลเวร</button>
+    </div>
+
+    <div class="card">
+        <h3>📋 ประวัติการส่งเวรวันนี้</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>เวลาที่บันทึก</th>
+                        <th>ชื่อผู้ส่ง</th>
+                        <th>ห้องเรียน</th>
+                        <th>รูปหลักฐาน (มีเวลากำกับ)</th>
+                    </tr>
+                </thead>
+                <tbody id="log-table-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const preview = document.getElementById('preview');
+    const startCamBtn = document.getElementById('start-cam');
+    const captureBtn = document.getElementById('capture-btn');
+    const cameraBox = document.getElementById('camera-box');
+    const submitBtn = document.getElementById('submit-btn');
+    const logTableBody = document.getElementById('log-table-body');
+
+    let streamData = null;
+    let imageDataUrl = null;
+
+    // 1. เปิดกล้องสตรีมสดบนหน้าเว็บ (ใช้กล้องหลังมือถือ)
+    startCamBtn.addEventListener('click', async () => {
+        try {
+            streamData = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment" }, 
+                audio: false 
+            });
+            video.srcObject = streamData;
+            cameraBox.style.display = 'block';
+            startCamBtn.style.display = 'none';
+        } catch (err) {
+            alert("ไม่สามารถเข้าถึงกล้องได้: " + err.message + "\n(หมายเหตุ: การเปิดกล้องสดบนเว็บ เบราว์เซอร์บังคับให้รันผ่าน HTTPS หรือเปิดบนคอมพิวเตอร์ localhost เท่านั้นครับ)");
+        }
+    });
+
+    // 2. ถ่ายรูปจากหน้าวิดีโอ + ประทับเวลาลงบนภาพ (Timestamp)
+    captureBtn.addEventListener('click', () => {
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const now = new Date();
+        const timeString = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH');
+        
+        const fontSize = Math.floor(canvas.width / 20);
+        ctx.font = `bold ${fontSize}px Arial`;
+        
+        ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+        ctx.fillRect(0, canvas.height - (fontSize * 1.8), canvas.width, fontSize * 1.8);
+        
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.fillText(timeString, canvas.width / 2, canvas.height - (fontSize * 0.5));
+
+        imageDataUrl = canvas.toDataURL('image/jpeg');
+        preview.src = imageDataUrl;
+        preview.style.display = 'block';
+
+        if (streamData) {
+            streamData.getTracks().forEach(track => track.stop());
+        }
+        cameraBox.style.display = 'none';
+        startCamBtn.style.display = 'block';
+        startCamBtn.innerText = 'ถ่ายใหม่';
+    });
+
+    // 3. กดบันทึกข้อมูลเข้าสู่ตาราง
+    submitBtn.addEventListener('click', () => {
+        const name = document.getElementById('name').value.trim();
+        const classroom = document.getElementById('classroom').value;
+
+        if (!name) {
+            alert('กรุณากรอกชื่อผู้ส่งเวรก่อนครับ');
+            return;
+        }
+        if (!imageDataUrl) {
+            alert('กรุณาถ่ายรูปเพื่อเป็นหลักฐานก่อนครับ');
+            return;
+        }
+
+        const now = new Date();
+        const timestamp = now.toLocaleTimeString('th-TH') + ' น.';
+
+        const logEntry = { name, classroom, timestamp, image: imageDataUrl };
+
+        let logs = JSON.parse(localStorage.getItem('dutyLogs')) || [];
+        logs.unshift(logEntry);
+        localStorage.setItem('dutyLogs', JSON.stringify(logs));
+
+        renderTable();
+        resetForm();
+        alert('บันทึกข้อมูลเวรห้อง ' + classroom + ' สำเร็จแล้ว!');
+    });
+
+    // ฟังก์ชันวาดตารางประวัติ
+    function renderTable() {
+        logTableBody.innerHTML = '';
+        const logs = JSON.parse(localStorage.getItem('dutyLogs')) || [];
+        
+        logs.forEach(log => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${log.timestamp}</td>
+                <td><b>${log.name}</b></td>
+                <td><span style="color: #4f46e5; font-weight: bold;">${log.classroom}</span></td>
+                <td><img src="${log.image}" class="thumbnail" onclick="window.open('${log.image}')" title="คลิกเพื่อดูรูปใหญ่"></td>
+            `;
+            logTableBody.appendChild(row);
+        });
+    }
+
+    // ฟังก์ชันล้างฟอร์มหลังบันทึก
+    function resetForm() {
+        document.getElementById('name').value = '';
+        preview.style.display = 'none';
+        imageDataUrl = null;
+        startCamBtn.innerText = 'เปิดกล้องถ่ายรูป';
+    }
+
+    window.onload = renderTable;
+</script>
+
+</body>
+</html>
